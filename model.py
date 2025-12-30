@@ -38,6 +38,12 @@ class UNet2D(nn.Module):
 
         self.flow_head = nn.Conv2d(base_channels, 2, kernel_size=3, padding=1)
 
+    @staticmethod
+    def _match_size(src, ref):
+        if src.shape[-2:] == ref.shape[-2:]:
+            return src
+        return F.interpolate(src, size=ref.shape[-2:], mode="bilinear", align_corners=False)
+
     def forward(self, x):
         enc1 = self.enc1(x)
         enc2 = self.enc2(self.pool1(enc1))
@@ -45,11 +51,11 @@ class UNet2D(nn.Module):
         bottleneck = self.bottleneck(self.pool3(enc3))
 
         dec3 = self.up3(bottleneck)
-        dec3 = self.dec3(torch.cat([dec3, enc3], dim=1))
+        dec3 = self.dec3(torch.cat([self._match_size(dec3, enc3), enc3], dim=1))
         dec2 = self.up2(dec3)
-        dec2 = self.dec2(torch.cat([dec2, enc2], dim=1))
+        dec2 = self.dec2(torch.cat([self._match_size(dec2, enc2), enc2], dim=1))
         dec1 = self.up1(dec2)
-        dec1 = self.dec1(torch.cat([dec1, enc1], dim=1))
+        dec1 = self.dec1(torch.cat([self._match_size(dec1, enc1), enc1], dim=1))
         return self.flow_head(dec1)
 
 
