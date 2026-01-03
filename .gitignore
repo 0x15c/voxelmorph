@@ -1,6 +1,11 @@
-
+screen_shots/
 __pycache__/
 scratch/*
+ckpt/
+wandb/
+*.npy
+*.pt
+*.png
 
 # Distribution / packaging
 .Python
